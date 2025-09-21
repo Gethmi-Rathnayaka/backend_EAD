@@ -60,3 +60,4 @@ _ReSharper*/
 .idea/
 # VS Code
 .vscode/
+.env
