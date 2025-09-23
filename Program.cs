@@ -12,12 +12,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Load .env (for local development)
 DotNetEnv.Env.Load();
 
+// Add environment variables to configuration
+builder.Configuration.AddEnvironmentVariables();
+
 // -----------------------
 // Read environment variables
-var dbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
-var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
-var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+var dbUrl = builder.Configuration["DATABASE_URL"];
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+
 
 Console.WriteLine($"JWT_KEY length: {Environment.GetEnvironmentVariable("JWT_KEY")?.Length}");
 
