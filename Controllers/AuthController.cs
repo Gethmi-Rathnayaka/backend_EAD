@@ -27,10 +27,38 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
-        var user = new AppUser { UserName = dto.Email, Email = dto.Email, Role = dto.Role };
+        var user = new AppUser 
+        { 
+            UserName = dto.Email, 
+            Email = dto.Email, 
+            Role = dto.Role, 
+            FirstName = dto.FirstName, 
+            LastName = dto.LastName, 
+            PhoneNumber = dto.PhoneNumber 
+        };
         var result = await _userManager.CreateAsync(user, dto.Password);
         if (!result.Succeeded) return BadRequest(result.Errors);
-        return Ok("User registered");
+        var accessToken = GenerateJwtToken(user);
+        var refreshToken = new RefreshToken
+        {
+            Token = Guid.NewGuid().ToString(),
+            UserId = user.Id,
+            Expires = DateTime.UtcNow.AddDays(7),
+            Revoked = false
+        };
+
+        _db.RefreshTokens.Add(refreshToken);
+        await _db.SaveChangesAsync();
+        return Ok(new
+        {
+            accessToken,
+            refreshToken = refreshToken.Token,
+            id = user.Id,
+            role = user.Role,
+            firstName = user.FirstName,
+            lastName = user.LastName,
+            phoneNumber = user.PhoneNumber 
+        });
     }
 
     [HttpPost("login")]
@@ -54,7 +82,15 @@ public class AuthController : ControllerBase
         _db.RefreshTokens.Add(refreshToken);
         await _db.SaveChangesAsync();
 
-        return Ok(new { accessToken, refreshToken = refreshToken.Token, role = user.Role });
+        return Ok(new 
+        {   
+            accessToken, 
+            refreshToken = refreshToken.Token, 
+            role = user.Role,
+            firstName = user.FirstName,
+            lastName = user.LastName,
+            phoneNumber = user.PhoneNumber
+        });
     }
 
     [HttpPost("refresh")]
@@ -99,6 +135,6 @@ public class AuthController : ControllerBase
     }
 }
 
-public record RegisterDto(string Email, string Password, string Role);
+public record RegisterDto(string Email, string Password, string Role, string FirstName, string LastName, string PhoneNumber);
 public record LoginDto(string Email, string Password);
 public record RefreshRequest(string RefreshToken);
